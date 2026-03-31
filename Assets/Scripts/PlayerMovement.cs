@@ -6,41 +6,41 @@ public class PlayerMovement : MonoBehaviour
 {
     [Header("Movement Speed")]
     [Tooltip("The speed the player will be moving by default")]
-    public float playerRunSpeed;
+    public float playerRunSpeed; // 80
     [Tooltip("The speed the player will be moving when sliding")]
-    public float playerSlideSpeed;
+    public float playerSlideSpeed; // 40
     [Tooltip("The amount of speed the player keeps when rotating")]
-    public float rotationTolerance;
+    public float rotationTolerance; // 0.02
     [Tooltip("The strength of force for player to move in wanted direction")]
-    public float moveForwardsStrength;
+    public float moveForwardsStrength; // 0.03
 
     [Header("Vertical Movements")]
     [Tooltip("The speed in which the player falls (In a way, gravity strength)")]
-    public float fallSpeed;
+    public float fallSpeed; // 60
     [Tooltip("The height of the player's jump")]
-    public float jumpStrength;
+    public float jumpStrength; // 40
 
     [Header("Dashing")]
     [Tooltip("The speed the player is given when dashing")]
-    public float dashSpeed;
+    public float dashSpeed; // 130
     [Tooltip("The time the player has to wait in between dashes")]
-    public float dashLength;
+    public float dashLength; // 1
 
     [Header("Quick Fall and Slide")]
     [Tooltip("The speed the player will fall after pressing the quick fall button")]
-    public float fallStrength;
+    public float fallStrength; // 30
 
     [Header("Camera")]
     [Tooltip("The speed in which the camera will turn with the mouse")]
-    public float camSensitivity;
+    public float camSensitivity; // 2
 
     [Header("Dampening")]
     [Tooltip("The rate the player slows down by default")]
-    public float moveDampeningRun;
+    public float moveDampeningRun; // 0.98
     [Tooltip("The rate the player slows down when sliding")]
-    public float moveDampeningSliding;
+    public float moveDampeningSliding; // 0.996
     [Tooltip("The rate the player slows down when standing still")]
-    public float moveDampeningStop;
+    public float moveDampeningStop; // 0.92
 
     [Header("UI")]
     [Tooltip("The indicator for the dash timer")]
@@ -103,18 +103,18 @@ public class PlayerMovement : MonoBehaviour
         // if touching ground
         RaycastHit hit3;
         if (Physics.SphereCast(transform.position, 0.3f, Vector3.down, out hit3, 1.2f))
-        {// flipping (or locking camera rotation)
-            if (camRot.x > 300) { camRot -= 360 * Vector3.right; }
-            else if (camRot.x < -60) { camRot += 360 * Vector3.right; }
+        {// flipping (or locking camera rotation when on ground)
+            if (camRot.x > 360) { camRot -= 360 * Vector3.right; }
+            else if (camRot.x < -180) { camRot += 360 * Vector3.right; }
 
             if (camClamped)
             {
                 camRot = Mathf.Clamp(camRot.x, 0, 180) * Vector3.right;
             }
             else
-            {
-                if (camRot.x < 0) { camRot += Vector3.right * 400 * Time.deltaTime; }
-                else if (camRot.x > 180) { camRot -= Vector3.right * 400 * Time.deltaTime; }
+            {// rotating the camera towards the clamp values
+                if (camRot.x < 0) { camRot -= Vector3.right * 400 * Time.deltaTime; }
+                else if (camRot.x > 180) { camRot += Vector3.right * 400 * Time.deltaTime; }
                 else { camClamped = true; }
             }
         }
@@ -122,7 +122,7 @@ public class PlayerMovement : MonoBehaviour
         {
             camClamped = false;
         }
-        
+
         // Rotating the camera and player with mouse movements
         cameraObj.transform.localEulerAngles = camRot;
         transform.localEulerAngles += (Vector3.up * Input.GetAxisRaw("Mouse X") * camSensitivity);
@@ -196,7 +196,7 @@ public class PlayerMovement : MonoBehaviour
 
             playerRigid.linearVelocity = (((transform.forward * dashDir.y) + (transform.right * dashDir.x)) * tempDashSpeed) + (Vector3.up * playerRigid.linearVelocity.y);
         }
-        dashBar.fillAmount = (dashLength - dashTimer) / dashLength;
+        if (dashBar != null) { dashBar.fillAmount = (dashLength - dashTimer) / dashLength; }
 
         // moving the player based on input
         playerRigid.linearVelocity += transform.forward * playerMovInput.y * playerSpeed * Time.deltaTime;
@@ -206,7 +206,7 @@ public class PlayerMovement : MonoBehaviour
 
         // displaying the player's speed
         Vector3 horizontalVelocity = new Vector3(playerRigid.linearVelocity.x, 0, playerRigid.linearVelocity.z);
-        speedDisplay.text = $"{(int)horizontalVelocity.magnitude}";
+        if (speedDisplay != null) { speedDisplay.text = $"{(int)horizontalVelocity.magnitude}"; }
 
         // timers
         if (jumpTimer > 0) { jumpTimer -= Time.deltaTime; }
@@ -226,10 +226,15 @@ public class PlayerMovement : MonoBehaviour
         // Movement dampening
         playerRigid.linearVelocity = new Vector3(playerRigid.linearVelocity.x * (moveDampening + rotationDamp), playerRigid.linearVelocity.y, playerRigid.linearVelocity.z * (moveDampening + rotationDamp));
 
+        // slowly turning to where player is trying to move
         Vector3 playerMovInput = new Vector3(Input.GetAxisRaw("Horizontal"), Input.GetAxisRaw("Vertical"), 0).normalized;
         Vector3 newRotation = Vector3.Lerp(playerRigid.linearVelocity, 
                                            playerRigid.linearVelocity.magnitude * ((playerRigid.transform.right * playerMovInput.x) + (playerRigid.transform.forward * playerMovInput.y)), 
                                            moveForwardsStrength);
         playerRigid.linearVelocity = new Vector3(newRotation.x, playerRigid.linearVelocity.y, newRotation.z);
+        if (playerRigid.linearVelocity.magnitude > 215)
+        {// setting a maximum speed
+            playerRigid.linearVelocity = playerRigid.linearVelocity.normalized * 215;
+        }
     }
 }
