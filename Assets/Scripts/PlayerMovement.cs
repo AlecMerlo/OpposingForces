@@ -4,52 +4,132 @@ using UnityEngine.UI;
 
 public class PlayerMovement : MonoBehaviour
 {
-    public float camSensitivity, playerSpeed, playerRunSpeed, playerSlideSpeed, fallSpeed, jumpStrength;
-    public float dashSpeed, dashLength, fallStrength;
-    public float moveDampeningRun, moveDampeningSliding, moveDampeningStop;
+    [Header("Movement Speed")]
+    [Tooltip("The speed the player will be moving by default")]
+    public float playerRunSpeed;
+    [Tooltip("The speed the player will be moving when sliding")]
+    public float playerSlideSpeed;
+
+    [Header("Vertical Movements")]
+    [Tooltip("The speed in which the player falls (In a way, gravity strength)")]
+    public float fallSpeed;
+    [Tooltip("The height of the player's jump")]
+    public float jumpStrength;
+
+    [Header("Dashing")]
+    [Tooltip("The speed the player is given when dashing")]
+    public float dashSpeed;
+    [Tooltip("The time the player has to wait in between dashes")]
+    public float dashLength;
+
+    [Header("Quick Fall and Slide")]
+    [Tooltip("The speed the player will fall after pressing the quick fall button")]
+    public float fallStrength;
+
+    [Header("Camera")]
+    [Tooltip("The speed in which the camera will turn with the mouse")]
+    public float camSensitivity;
+
+    [Header("Dampening")]
+    [Tooltip("The rate the player slows down by default")]
+    public float moveDampeningRun;
+    [Tooltip("The rate the player slows down when sliding")]
+    public float moveDampeningSliding;
+    [Tooltip("The rate the player slows down when standing still")]
+    public float moveDampeningStop;
+
+    [Header("UI")]
+    [Tooltip("The indicator for the dash timer")]
     public Image dashBar;
+    [Tooltip("The indicator for the player's current horizontal speed")]
     public TextMeshProUGUI speedDisplay;
 
+    // CAMERA
+    // The camera attached to the player character
     private Camera cam;
-    private PhysicsMaterial playerPhysMa;
-    private Rigidbody playerRigid;
+    // The camera game object attached to the player character
     private GameObject cameraObj;
-    private float dashTimer, jumpTimer, moveDampening;
+    // The fov the camera will be moving towards based on the player's speed
+    private float camFovGoal;
+    // The camera rotation
+    private Vector3 camRot;
+    // whether the camera is clamped
+    private bool camClamped;
+
+    // PLAYER COMPONENTS
+    // The player's rigidbody
+    private Rigidbody playerRigid;
+
+    // PLAYER MOVEMENT
+    // The current speed the player will be moving
+    private float playerSpeed;
+    // The current rate that the player slows down
+    private float moveDampening;
+
+    // TIMERS
+    // The time left before the player can dash again
+    private float dashTimer;
+    // The time left before the player can jump again
+    private float jumpTimer;
 
     void Start()
     {
+        // Setting up private variables
         playerRigid = GetComponent<Rigidbody>();
         cameraObj = transform.GetComponentInChildren<Camera>().gameObject;
         cam = cameraObj.GetComponent<Camera>();
 
+        // Setting to default values
         moveDampening = moveDampeningRun;
-
-        playerPhysMa = GetComponent<Collider>().material;
+        playerSpeed = playerRunSpeed;
 
         Cursor.lockState = CursorLockMode.Locked;
     }
 
     void Update()
     {
+        // The normalized value for up, down, left, right
         Vector3 playerMovInput = new Vector3();
-
         playerMovInput = new Vector3(Input.GetAxisRaw("Horizontal"), Input.GetAxisRaw("Vertical"), 0).normalized;
 
-        playerRigid.linearVelocity += transform.forward * playerMovInput.y * playerSpeed * Time.deltaTime;
-        playerRigid.linearVelocity += transform.right * playerMovInput.x * playerSpeed * Time.deltaTime;
-        playerRigid.linearVelocity += Vector3.down * fallSpeed * Time.deltaTime;
+        camRot -= Vector3.right * Input.GetAxisRaw("Mouse Y") * camSensitivity;
 
-        cameraObj.transform.localEulerAngles -= (Vector3.right * Input.GetAxisRaw("Mouse Y") * camSensitivity);
+        // if touching ground
+        RaycastHit hit3;
+        if (Physics.SphereCast(transform.position, 0.3f, Vector3.down, out hit3, 1.2f))
+        {
+            if (camRot.x > 300) { camRot -= 360 * Vector3.right; }
+            else if (camRot.x < -60) { camRot += 360 * Vector3.right; }
+
+            if (camClamped)
+            {
+                camRot = Mathf.Clamp(camRot.x, 0, 180) * Vector3.right;
+            }
+            else
+            {
+                if (camRot.x < 0) { camRot += Vector3.right * 400 * Time.deltaTime; }
+                else if (camRot.x > 180) { camRot -= Vector3.right * 400 * Time.deltaTime; }
+                else { camClamped = true; }
+            }
+        }
+        else if (playerRigid.linearVelocity.y > 0.1f)
+        {
+            camClamped = false;
+        }
+            // Rotating the camera and player with mouse movements
+            cameraObj.transform.localEulerAngles = camRot;
         transform.localEulerAngles += (Vector3.up * Input.GetAxisRaw("Mouse X") * camSensitivity);
 
         // jump
-        if (Input.GetKey(KeyCode.Space) && !Input.GetKey(KeyCode.LeftControl))
+        if (Input.GetKey(KeyCode.Space))
         {
+            // if touching ground
             RaycastHit hit;
             if (jumpTimer <= 0 && Physics.SphereCast(transform.position, 0.3f, Vector3.down, out hit, 1.2f))
             {
                 jumpTimer = 1;
                 playerRigid.linearVelocity = new Vector3(playerRigid.linearVelocity.x, jumpStrength, playerRigid.linearVelocity.z);
+                if (Input.GetKey(KeyCode.LeftControl)) { playerRigid.linearVelocity *= 0.90f; }
             }
         }
 
@@ -57,6 +137,7 @@ public class PlayerMovement : MonoBehaviour
         // quick fall and slide
         if (Input.GetKeyDown(KeyCode.LeftControl))
         {
+            // if not touching ground
             RaycastHit hit;
             if (!Physics.SphereCast(transform.position, 0.3f, Vector3.down, out hit, 1.2f))
             {// quick fall
@@ -67,29 +148,28 @@ public class PlayerMovement : MonoBehaviour
                 }
             }
             else
-            {
-                playerRigid.linearVelocity += transform.forward.normalized;
+            {// small boost forwards and up when sliding
+                playerRigid.linearVelocity += new Vector3(transform.forward.x, 0, transform.forward.z).normalized + Vector3.up;
             }
-            transform.localScale = new Vector3(transform.localScale.x, 0.5f, transform.localScale.z);
             playerSpeed = playerSlideSpeed;
-            playerPhysMa.dynamicFriction = 0;
+            // crouch down
+            transform.localScale = new Vector3(transform.localScale.x, 0.5f, transform.localScale.z);
         }
         if (Input.GetKey(KeyCode.LeftControl))
-        {
+        {// sliding
             moveDampening = moveDampeningSliding;
         }
         else if (playerMovInput.magnitude < 0.1f && Physics.SphereCast(transform.position, 0.3f, Vector3.down, out hit2, 1.2f))
-        {// no movement
+        {// no movement and touching around
             moveDampening = moveDampeningStop;
         }
         else
-        {
+        {// moving normally
             moveDampening = moveDampeningRun;
         }
         if (Input.GetKeyUp(KeyCode.LeftControl))
         {// stop sliding
             transform.localScale = new Vector3(transform.localScale.x, 1, transform.localScale.z);
-            playerPhysMa.dynamicFriction = 0.6f;
             moveDampening = moveDampeningRun;
             playerSpeed = playerRunSpeed;
         }
@@ -102,32 +182,38 @@ public class PlayerMovement : MonoBehaviour
 
             dashTimer = dashLength;
 
+            // making sure dashing never slow down the player
             float tempDashSpeed;
-            if (playerRigid.linearVelocity.magnitude > dashSpeed)
-            {
-                tempDashSpeed = playerRigid.linearVelocity.magnitude + 5f;
-            }
-            else
-            {
-                tempDashSpeed = dashSpeed;
-            }
+            if (playerRigid.linearVelocity.magnitude > dashSpeed) { tempDashSpeed = playerRigid.linearVelocity.magnitude + 5f; }
+            else { tempDashSpeed = dashSpeed; }
 
             playerRigid.linearVelocity = (((transform.forward * dashDir.y) + (transform.right * dashDir.x)) * tempDashSpeed) + (Vector3.up * playerRigid.linearVelocity.y);
         }
         dashBar.fillAmount = (dashLength - dashTimer) / dashLength;
 
-        Vector3 horizontalVelocity = new Vector3(playerRigid.linearVelocity.x, 0, playerRigid.linearVelocity.z);
+        // moving the player based on input
+        playerRigid.linearVelocity += transform.forward * playerMovInput.y * playerSpeed * Time.deltaTime;
+        playerRigid.linearVelocity += transform.right * playerMovInput.x * playerSpeed * Time.deltaTime;
+        // gravity
+        playerRigid.linearVelocity += Vector3.down * fallSpeed * Time.deltaTime;
 
+        // displaying the player's speed
+        Vector3 horizontalVelocity = new Vector3(playerRigid.linearVelocity.x, 0, playerRigid.linearVelocity.z);
         speedDisplay.text = $"{(int)horizontalVelocity.magnitude}";
 
+        // timers
         if (jumpTimer > 0) { jumpTimer -= Time.deltaTime; }
         if (dashTimer > 0) {  dashTimer -= Time.deltaTime; }
 
-        cam.fieldOfView = 60 + ((horizontalVelocity.magnitude * 2 / 2) / 6);
+        // changing the fov to smoothly match the player's speed
+        camFovGoal = 60 + ((horizontalVelocity.magnitude * 2 / 2) / 6);
+        if (cam.fieldOfView + 0.35f < camFovGoal) { cam.fieldOfView += Time.deltaTime * 25; }
+        if (cam.fieldOfView - 0.35f > camFovGoal) { cam.fieldOfView -= Time.deltaTime * 25; }
     }
 
     private void FixedUpdate()
     {
+        // Movement dampening
         playerRigid.linearVelocity = new Vector3(playerRigid.linearVelocity.x * moveDampening, playerRigid.linearVelocity.y, playerRigid.linearVelocity.z * moveDampening);
     }
 }
