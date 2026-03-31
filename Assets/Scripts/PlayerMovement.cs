@@ -9,6 +9,10 @@ public class PlayerMovement : MonoBehaviour
     public float playerRunSpeed;
     [Tooltip("The speed the player will be moving when sliding")]
     public float playerSlideSpeed;
+    [Tooltip("The amount of speed the player keeps when rotating")]
+    public float rotationTolerance;
+    [Tooltip("The strength of force for player to move in wanted direction")]
+    public float moveForwardsStrength;
 
     [Header("Vertical Movements")]
     [Tooltip("The speed in which the player falls (In a way, gravity strength)")]
@@ -65,6 +69,8 @@ public class PlayerMovement : MonoBehaviour
     private float playerSpeed;
     // The current rate that the player slows down
     private float moveDampening;
+    // The tolerance for movement drag when rotating
+    private float rotationDamp;
 
     // TIMERS
     // The time left before the player can dash again
@@ -97,7 +103,7 @@ public class PlayerMovement : MonoBehaviour
         // if touching ground
         RaycastHit hit3;
         if (Physics.SphereCast(transform.position, 0.3f, Vector3.down, out hit3, 1.2f))
-        {
+        {// flipping (or locking camera rotation)
             if (camRot.x > 300) { camRot -= 360 * Vector3.right; }
             else if (camRot.x < -60) { camRot += 360 * Vector3.right; }
 
@@ -116,8 +122,9 @@ public class PlayerMovement : MonoBehaviour
         {
             camClamped = false;
         }
-            // Rotating the camera and player with mouse movements
-            cameraObj.transform.localEulerAngles = camRot;
+        
+        // Rotating the camera and player with mouse movements
+        cameraObj.transform.localEulerAngles = camRot;
         transform.localEulerAngles += (Vector3.up * Input.GetAxisRaw("Mouse X") * camSensitivity);
 
         // jump
@@ -209,11 +216,20 @@ public class PlayerMovement : MonoBehaviour
         camFovGoal = 60 + ((horizontalVelocity.magnitude * 2 / 2) / 6);
         if (cam.fieldOfView + 0.35f < camFovGoal) { cam.fieldOfView += Time.deltaTime * 25; }
         if (cam.fieldOfView - 0.35f > camFovGoal) { cam.fieldOfView -= Time.deltaTime * 25; }
+
+        if (Input.GetAxisRaw("Mouse X") != 0 && playerRigid.linearVelocity.magnitude != 0) { rotationDamp = (1 / (Mathf.Abs(Input.GetAxisRaw("Mouse X")) * playerRigid.linearVelocity.magnitude)) * rotationTolerance; }
+        else { rotationDamp = 0; }
     }
 
     private void FixedUpdate()
     {
         // Movement dampening
-        playerRigid.linearVelocity = new Vector3(playerRigid.linearVelocity.x * moveDampening, playerRigid.linearVelocity.y, playerRigid.linearVelocity.z * moveDampening);
+        playerRigid.linearVelocity = new Vector3(playerRigid.linearVelocity.x * (moveDampening + rotationDamp), playerRigid.linearVelocity.y, playerRigid.linearVelocity.z * (moveDampening + rotationDamp));
+
+        Vector3 playerMovInput = new Vector3(Input.GetAxisRaw("Horizontal"), Input.GetAxisRaw("Vertical"), 0).normalized;
+        Vector3 newRotation = Vector3.Lerp(playerRigid.linearVelocity, 
+                                           playerRigid.linearVelocity.magnitude * ((playerRigid.transform.right * playerMovInput.x) + (playerRigid.transform.forward * playerMovInput.y)), 
+                                           moveForwardsStrength);
+        playerRigid.linearVelocity = new Vector3(newRotation.x, playerRigid.linearVelocity.y, newRotation.z);
     }
 }
