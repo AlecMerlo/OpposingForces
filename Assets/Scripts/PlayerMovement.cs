@@ -13,6 +13,8 @@ public class PlayerMovement : MonoBehaviour
     public float rotationTolerance; // 0.02
     [Tooltip("The strength of force for player to move in wanted direction")]
     public float moveForwardsStrength; // 0.03
+    [Tooltip("The speed multiplier when blocking")]
+    public float blockingMult;
 
     [Header("Vertical Movements")]
     [Tooltip("The speed in which the player falls (In a way, gravity strength)")]
@@ -71,6 +73,8 @@ public class PlayerMovement : MonoBehaviour
     private float moveDampening;
     // The tolerance for movement drag when rotating
     private float rotationDamp;
+    // The speed change for when the player is blocking
+    private float blockingSpeedDamp;
 
     // TIMERS
     // The time left before the player can dash again
@@ -88,6 +92,7 @@ public class PlayerMovement : MonoBehaviour
         // Setting to default values
         moveDampening = moveDampeningRun;
         playerSpeed = playerRunSpeed;
+        blockingSpeedDamp = 1;
 
         Cursor.lockState = CursorLockMode.Locked;
     }
@@ -198,6 +203,15 @@ public class PlayerMovement : MonoBehaviour
         }
         if (dashBar != null) { dashBar.fillAmount = (dashLength - dashTimer) / dashLength; }
 
+        if (Input.GetMouseButtonDown(1))
+        {
+            blockingSpeedDamp = blockingMult;
+        }
+        if (Input.GetMouseButtonUp(1))
+        {
+            blockingSpeedDamp = 1;
+        }
+
         // moving the player based on input
         playerRigid.linearVelocity += transform.forward * playerMovInput.y * playerSpeed * Time.deltaTime;
         playerRigid.linearVelocity += transform.right * playerMovInput.x * playerSpeed * Time.deltaTime;
@@ -224,7 +238,9 @@ public class PlayerMovement : MonoBehaviour
     private void FixedUpdate()
     {
         // Movement dampening
-        playerRigid.linearVelocity = new Vector3(playerRigid.linearVelocity.x * (moveDampening + rotationDamp), playerRigid.linearVelocity.y, playerRigid.linearVelocity.z * (moveDampening + rotationDamp));
+        playerRigid.linearVelocity = new Vector3(playerRigid.linearVelocity.x * (moveDampening + rotationDamp) * blockingSpeedDamp,
+                                                 playerRigid.linearVelocity.y,
+                                                 playerRigid.linearVelocity.z * (moveDampening + rotationDamp) * blockingSpeedDamp);
 
         // slowly turning to where player is trying to move
         Vector3 playerMovInput = new Vector3(Input.GetAxisRaw("Horizontal"), Input.GetAxisRaw("Vertical"), 0).normalized;
