@@ -11,6 +11,7 @@ public class Slice : MonoBehaviour
     public Transform sword;
     private float sliceTime = 1;
     public TrailRenderer tR;
+    public ParticleSystem pS;
 
     private float swingTimer;
 
@@ -30,6 +31,8 @@ public class Slice : MonoBehaviour
                 auSo.volume = 0.4f;
                 auSo.Play();
                 sliceTime = 0;
+                GameObject gO = Instantiate(pS.gameObject, pS.transform.parent);
+                gO.SetActive(true);
                 Debug.Log("Hit");
             }
             else

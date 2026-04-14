@@ -28,7 +28,7 @@ namespace NodeCanvas.Tasks.Actions {
 					auSo.clip = hurtAC;
                     if (hurtImg.color.a > 0.15f)
                     {
-                        SceneManager.LoadScene("LoadinScene", LoadSceneMode.Single);
+                        SceneManager.LoadScene("Dead Scene", LoadSceneMode.Single);
                     }
                     hurtImg.color = new Color(1, 1, 1, 0.75f);
                 }
