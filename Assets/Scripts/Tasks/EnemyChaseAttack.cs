@@ -1,6 +1,7 @@
 using NodeCanvas.Framework;
 using ParadoxNotion.Design;
 using UnityEngine;
+using UnityEngine.SceneManagement;
 using UnityEngine.UI;
 
 
@@ -25,7 +26,11 @@ namespace NodeCanvas.Tasks.Actions {
 				else
 				{// hurt
 					auSo.clip = hurtAC;
-					hurtImg.color = new Color(1, 1, 1, 0.75f);
+                    if (hurtImg.color.a > 0.15f)
+                    {
+                        SceneManager.LoadScene(0, LoadSceneMode.Single);
+                    }
+                    hurtImg.color = new Color(1, 1, 1, 0.75f);
                 }
 				auSo.Play();
 			}
