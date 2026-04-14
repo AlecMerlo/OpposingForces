@@ -106,7 +106,8 @@ public class PlayerMovement : MonoBehaviour
         Vector3 playerMovInput = new Vector3();
         playerMovInput = new Vector3(Input.GetAxisRaw("Horizontal"), Input.GetAxisRaw("Vertical"), 0).normalized;
 
-        camRot -= Vector3.right * Input.GetAxisRaw("Mouse Y") * camSensitivity;
+        if (Time.timeScale != 0)
+            camRot -= Vector3.right * Input.GetAxisRaw("Mouse Y") * camSensitivity;
 
         // if touching ground
         RaycastHit hit3;
@@ -133,7 +134,8 @@ public class PlayerMovement : MonoBehaviour
 
         // Rotating the camera and player with mouse movements
         cameraObj.transform.localEulerAngles = camRot;
-        transform.localEulerAngles += (Vector3.up * Input.GetAxisRaw("Mouse X") * camSensitivity);
+        if (Time.timeScale != 0)
+            transform.localEulerAngles += (Vector3.up * Input.GetAxisRaw("Mouse X") * camSensitivity);
 
         // jump
         if (Input.GetKey(KeyCode.Space))

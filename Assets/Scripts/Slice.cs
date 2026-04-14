@@ -1,3 +1,4 @@
+using System.Collections;
 using Unity.VisualScripting;
 using UnityEngine;
 using UnityEngine.UI;
@@ -12,6 +13,8 @@ public class Slice : MonoBehaviour
     private float sliceTime = 1;
     public TrailRenderer tR;
     public ParticleSystem pS;
+
+    public GameObject hitImg;
 
     private float swingTimer;
 
@@ -29,8 +32,13 @@ public class Slice : MonoBehaviour
             {
                 auSo.clip = hitSound;
                 auSo.volume = 0.4f;
+                auSo.ignoreListenerPause = true;
                 auSo.Play();
                 sliceTime = 0;
+                Time.timeScale = 0;
+                AudioListener.pause = true;
+                hitImg.SetActive(true);
+                StartCoroutine(Pause());
                 GameObject gO = Instantiate(pS.gameObject, pS.transform.parent);
                 gO.SetActive(true);
                 Debug.Log("Hit");
@@ -62,5 +70,14 @@ public class Slice : MonoBehaviour
         {
             tR.enabled = false;
         }
+    }
+
+    public IEnumerator Pause()
+    {
+        yield return new WaitForSecondsRealtime(0.25f);
+        Time.timeScale = 1;
+        AudioListener.pause = false;
+        hitImg.SetActive(false);
+        auSo.ignoreListenerPause = false;
     }
 }
