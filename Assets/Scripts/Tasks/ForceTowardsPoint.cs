@@ -9,7 +9,7 @@ namespace NodeCanvas.Tasks.Actions {
 	public class ForceTowardsPoint : ActionTask {
 		public Rigidbody rb;
 		public Transform target;
-		public float speed;
+		public BBParameter<int> speed = new BBParameter<int>();
 
 		protected override string OnInit() {
 			return null;
@@ -20,7 +20,7 @@ namespace NodeCanvas.Tasks.Actions {
 			wantedDir = -(new Vector3(agent.transform.position.x, 0, agent.transform.position.z) 
 				        - new Vector3(target.position.x, 0, target.position.z)).normalized;
 
-            rb.linearVelocity = (wantedDir * speed * Time.deltaTime * Vector3.Distance(agent.transform.position, target.position*1.6f)) + (rb.linearVelocity.y * Vector3.up);
+            rb.linearVelocity = (wantedDir * speed.value * Time.deltaTime * Vector3.Distance(agent.transform.position, target.position*1.6f)) + (rb.linearVelocity.y * Vector3.up);
 
             EndAction(true);
 		}

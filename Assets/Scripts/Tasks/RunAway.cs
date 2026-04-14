@@ -8,7 +8,7 @@ namespace NodeCanvas.Tasks.Actions {
 	public class RunAway : ActionTask {
 		public Rigidbody rb;
 		public Transform playerTra;
-		public int speed;
+		public BBParameter<int> speed = new BBParameter<int>();
 
 		protected override string OnInit() {
 			return null;
@@ -18,7 +18,7 @@ namespace NodeCanvas.Tasks.Actions {
 			Vector3 pTra = new Vector3(playerTra.position.x, 0, playerTra.position.z);
 			Vector3 rbTra = new Vector3(rb.transform.position.x, 0, rb.transform.position.z);
 			rb.AddForce(-(pTra - rbTra).normalized * 400 * Time.deltaTime, ForceMode.Impulse);
-			rb.maxLinearVelocity = speed;
+			rb.maxLinearVelocity = speed.value;
 
 			EndAction(true);
 		}

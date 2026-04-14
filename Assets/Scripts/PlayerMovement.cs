@@ -106,8 +106,7 @@ public class PlayerMovement : MonoBehaviour
         Vector3 playerMovInput = new Vector3();
         playerMovInput = new Vector3(Input.GetAxisRaw("Horizontal"), Input.GetAxisRaw("Vertical"), 0).normalized;
 
-        if (Time.timeScale != 0)
-            camRot -= Vector3.right * Input.GetAxisRaw("Mouse Y") * camSensitivity;
+        camRot -= Vector3.right * Input.GetAxisRaw("Mouse Y") * camSensitivity * Time.timeScale;
 
         // if touching ground
         RaycastHit hit3;
