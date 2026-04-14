@@ -28,8 +28,6 @@ public class Slice : MonoBehaviour
 
     public Blackboard bbRun, bbChase;
 
-    public GameObject cats;
-
     void Update()
     {
         if (Input.GetMouseButtonDown(0) && swingTimer <= 0)
@@ -98,7 +96,6 @@ public class Slice : MonoBehaviour
                         gO2.SetActive(true);
                         bbRun.gameObject.SetActive(false);
                         bbChase.gameObject.SetActive(false);
-                        cats.SetActive(true);
                         pP1.SetActive(false);
                         pP2.SetActive(false);
                         StartCoroutine(Pause());
