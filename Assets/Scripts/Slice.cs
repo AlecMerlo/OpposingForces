@@ -24,6 +24,8 @@ public class Slice : MonoBehaviour
 
     public GameObject tTheyre, tGoing, tFaster;
 
+    public GameObject pP1, pP2;
+
     public Blackboard bbRun, bbChase;
 
     void Update()
@@ -59,7 +61,11 @@ public class Slice : MonoBehaviour
 
                         bbChase.GetVariable("farSpeed").value = 500;
                         bbChase.GetVariable("closeSpeed").value = 650;
+                        
                         Time.timeScale = 0.1f;
+
+                        pP1.SetActive(true);
+
                         StartCoroutine(TheyreGettingFaster());
                         break;
                     case 2:
@@ -72,7 +78,11 @@ public class Slice : MonoBehaviour
 
                         bbChase.GetVariable("farSpeed").value = 550;
                         bbChase.GetVariable("closeSpeed").value = 750;
+
                         Time.timeScale = 0;
+
+                        pP2.SetActive(true);
+
                         StartCoroutine(Pause());
                         break;
                     case 3:
