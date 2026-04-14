@@ -16,6 +16,8 @@ public class PlayerMovement : MonoBehaviour
     [Tooltip("The speed multiplier when blocking")]
     public float blockingMult;
 
+    public AudioSource windSound;
+
     [Header("Vertical Movements")]
     [Tooltip("The speed in which the player falls (In a way, gravity strength)")]
     public float fallSpeed; // 60
@@ -95,6 +97,7 @@ public class PlayerMovement : MonoBehaviour
         blockingSpeedDamp = 1;
 
         Cursor.lockState = CursorLockMode.Locked;
+        camRot = new Vector3(90, 0, 0);
     }
 
     void Update()
@@ -252,5 +255,7 @@ public class PlayerMovement : MonoBehaviour
         {// setting a maximum speed
             playerRigid.linearVelocity = playerRigid.linearVelocity.normalized * 215;
         }
+
+        windSound.volume = playerRigid.linearVelocity.magnitude / 65;
     }
 }
