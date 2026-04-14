@@ -28,6 +28,8 @@ public class Slice : MonoBehaviour
 
     public Blackboard bbRun, bbChase;
 
+    public GameObject cats;
+
     void Update()
     {
         if (Input.GetMouseButtonDown(0) && swingTimer <= 0)
@@ -49,6 +51,9 @@ public class Slice : MonoBehaviour
                 sliceTime = 0;
                 AudioListener.pause = true;
                 hitImg.SetActive(true);
+
+                bbRun.GetComponent<Rigidbody>().linearVelocity *= 200;
+
                 switch (hits)
                 {
                     case 1:
@@ -93,6 +98,9 @@ public class Slice : MonoBehaviour
                         gO2.SetActive(true);
                         bbRun.gameObject.SetActive(false);
                         bbChase.gameObject.SetActive(false);
+                        cats.SetActive(true);
+                        pP1.SetActive(false);
+                        pP2.SetActive(false);
                         StartCoroutine(Pause());
                         break;
                     default:
