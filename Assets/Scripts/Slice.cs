@@ -28,17 +28,27 @@ public class Slice : MonoBehaviour
 
     public Blackboard bbRun, bbChase;
 
+    public Transform childBloodObj;
+
     void Update()
     {
         if (Input.GetMouseButtonDown(0) && swingTimer <= 0)
         {
             swingTimer = swingTime;
 
-            RaycastHit hit = new RaycastHit();
-
             LayerMask mask = LayerMask.GetMask("RunAway");
 
-            if (Physics.SphereCast(transform.position, 4, transform.forward, out hit, 3, mask))
+            LayerMask maxwMask = LayerMask.GetMask("Cat");
+
+            if (Physics.Raycast(transform.position, transform.forward, 7, maxwMask))
+            {
+                childBloodObj.transform.parent = transform.parent;
+                childBloodObj.transform.position = transform.position;
+                childBloodObj.gameObject.SetActive(true);
+                catObj.SetActive(false);
+            }
+
+            if (Physics.Raycast(transform.position, transform.forward, 8, mask))
             {
                 hits++;
                 auSo.clip = hitSound;
@@ -89,10 +99,8 @@ public class Slice : MonoBehaviour
                         break;
                     case 3:
                         Time.timeScale = 0.1f;
-                        GameObject gO2 = Instantiate(bloodParticles);
-                        gO2.transform.parent = bbChase.transform.parent;
-                        gO2.transform.position = bbChase.transform.position;
-                        gO2.SetActive(true);
+                        bloodParticles.transform.position = new Vector3(pS.gameObject.transform.position.x, 0, pS.gameObject.transform.position.z);
+                        bloodParticles.SetActive(true);
                         bbRun.gameObject.SetActive(false);
                         bbChase.gameObject.SetActive(false);
                         pP1.SetActive(false);
@@ -101,8 +109,7 @@ public class Slice : MonoBehaviour
                         auSo2.clip = gore;
                         auSo2.volume = 0.3f;
                         auSo2.Play();
-                        catObj.transform.position = bbChase.transform.position;
-                        catObj.transform.position = new Vector3(catObj.transform.position.x, 0, catObj.transform.position.z);
+                        catObj.transform.position = new Vector3(pS.gameObject.transform.position.x, 0, pS.gameObject.transform.position.z);
                         catObj.SetActive(true);
                         catObj.GetComponent<AudioSource>().ignoreListenerPause = true;
                         StartCoroutine(Pause());
@@ -113,7 +120,6 @@ public class Slice : MonoBehaviour
                         break;
                 }
                 GameObject gO = Instantiate(pS.gameObject, pS.transform.parent);
-                gO.transform.position = bbChase.transform.position - transform.position;
                 gO.SetActive(true);
                 Debug.Log("Hit");
             }
