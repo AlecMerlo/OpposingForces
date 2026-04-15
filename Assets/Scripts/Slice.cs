@@ -1,7 +1,5 @@
 using NodeCanvas.Framework;
-using NodeCanvas.Tasks.Actions;
 using System.Collections;
-using Unity.VisualScripting;
 using UnityEngine;
 using UnityEngine.UI;
 
@@ -9,20 +7,22 @@ public class Slice : MonoBehaviour
 {
     public float swingTime;
     public Image swingBar;
-    public AudioSource auSo, auSo2;
+    public AudioSource bgMusic, auSo, auSo2, auSo3;
     public AudioClip hitSound, missSound;
-    public AudioClip dun1, dun2;
+    public AudioClip dun1, dun2, meow, gore;
     public Transform sword;
     private float sliceTime = 1;
     public TrailRenderer tR;
     public ParticleSystem pS;
     public int hits = 0;
 
+    public GameObject catObj;
+
     public GameObject hitImg, bloodParticles;
 
     private float swingTimer;
 
-    public GameObject tTheyre, tGoing, tFaster;
+    public GameObject tTheyre, tGoing, tFaster, tThey, tStole, tYour, tCat;
 
     public GameObject pP1, pP2;
 
@@ -45,6 +45,7 @@ public class Slice : MonoBehaviour
                 auSo.volume = 0.4f;
                 auSo.ignoreListenerPause = true;
                 auSo2.ignoreListenerPause = true;
+                auSo3.ignoreListenerPause = true;
                 auSo.Play();
                 sliceTime = 0;
                 AudioListener.pause = true;
@@ -72,21 +73,19 @@ public class Slice : MonoBehaviour
                         StartCoroutine(TheyreGettingFaster());
                         break;
                     case 2:
-                        bbRun.GetVariable("farSpeed").value = 95;
+                        bbRun.GetVariable("farSpeed").value = 100;
                         bbRun.GetVariable("closeSpeed").value = 80;
 
-                        bbRun.GetVariable("firingSpeedClose").value = 0.15f;
-                        bbRun.GetVariable("firingSpeedMedium").value = 0.3f;
-                        bbRun.GetVariable("firingSpeedFar").value = 0.4f;
+                        bbRun.GetVariable("firingSpeedClose").value = 0.05f;
+                        bbRun.GetVariable("firingSpeedMedium").value = 0.2f;
+                        bbRun.GetVariable("firingSpeedFar").value = 0.3f;
 
                         bbChase.GetVariable("farSpeed").value = 550;
                         bbChase.GetVariable("closeSpeed").value = 750;
 
-                        Time.timeScale = 0;
+                        Time.timeScale = 0.1f;
 
-                        pP2.SetActive(true);
-
-                        StartCoroutine(Pause());
+                        StartCoroutine(TheyStoleYourCat());
                         break;
                     case 3:
                         Time.timeScale = 0.1f;
@@ -98,6 +97,14 @@ public class Slice : MonoBehaviour
                         bbChase.gameObject.SetActive(false);
                         pP1.SetActive(false);
                         pP2.SetActive(false);
+                        bgMusic.Stop();
+                        auSo2.clip = gore;
+                        auSo2.volume = 0.3f;
+                        auSo2.Play();
+                        catObj.transform.position = bbChase.transform.position;
+                        catObj.transform.position = new Vector3(catObj.transform.position.x, 0, catObj.transform.position.z);
+                        catObj.SetActive(true);
+                        catObj.GetComponent<AudioSource>().ignoreListenerPause = true;
                         StartCoroutine(Pause());
                         break;
                     default:
@@ -106,6 +113,7 @@ public class Slice : MonoBehaviour
                         break;
                 }
                 GameObject gO = Instantiate(pS.gameObject, pS.transform.parent);
+                gO.transform.position = bbChase.transform.position - transform.position;
                 gO.SetActive(true);
                 Debug.Log("Hit");
             }
@@ -140,7 +148,7 @@ public class Slice : MonoBehaviour
 
     public IEnumerator TheyreGettingFaster()
     {
-        yield return new WaitForSecondsRealtime(0.4f);
+        yield return new WaitForSecondsRealtime(0.2f);
         tTheyre.SetActive(true);
         auSo2.clip = dun1;
         auSo2.Play();
@@ -168,12 +176,52 @@ public class Slice : MonoBehaviour
         auSo.ignoreListenerPause = false;
     }
 
+    public IEnumerator TheyStoleYourCat()
+    {
+        yield return new WaitForSecondsRealtime(0.2f);
+        auSo2.clip = dun1;
+        auSo2.Play();
+        tThey.SetActive(true);
+        yield return new WaitForSecondsRealtime(0.6f);
+        auSo2.Play();
+        tThey.SetActive(false);
+        tStole.SetActive(true);
+        yield return new WaitForSecondsRealtime(0.6f);
+        auSo2.Play();
+        tStole.SetActive(false);
+        tYour.SetActive(true);
+        yield return new WaitForSecondsRealtime(0.6f);
+        auSo2.clip = dun2;
+        auSo2.Play();
+        auSo3.clip = meow;
+        auSo3.Play();
+        tYour.SetActive(false);
+        tCat.SetActive(true);
+        bgMusic.volume = 0.1f;
+        bgMusic.pitch = 1.2f;
+
+        for (float i = 0; i < 0.6f; i += 0.04f)
+        {
+            yield return new WaitForSecondsRealtime(0.03f);
+            tCat.transform.localPosition = new Vector3(Random.Range(-40, 40), Random.Range(-40, 40), 0);
+        }
+
+        tCat.SetActive(false);
+
+        pP2.SetActive(true);
+
+        Time.timeScale = 1;
+        AudioListener.pause = false;
+        hitImg.SetActive(false);
+        auSo.ignoreListenerPause = false;
+    }
+
     public IEnumerator Pause()
     {
         while (Time.timeScale < 1)
         {
-            yield return new WaitForSecondsRealtime(0.03f);
-            Time.timeScale += 0.05f;
+            yield return new WaitForSecondsRealtime(0.025f);
+            Time.timeScale += 0.01f;
         }
         Time.timeScale = 1;
         AudioListener.pause = false;

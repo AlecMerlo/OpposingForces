@@ -16,7 +16,9 @@ public class PlayerMovement : MonoBehaviour
     [Tooltip("The speed multiplier when blocking")]
     public float blockingMult;
 
-    public AudioSource windSound;
+    private bool quickFalling;
+
+    public AudioSource windSound, slamSound;
 
     [Header("Vertical Movements")]
     [Tooltip("The speed in which the player falls (In a way, gravity strength)")]
@@ -162,6 +164,7 @@ public class PlayerMovement : MonoBehaviour
                     jumpTimer = 0;
                     playerRigid.linearVelocity = new Vector3(playerRigid.linearVelocity.x, -fallStrength, playerRigid.linearVelocity.z);
                 }
+                quickFalling = true;
             }
             else
             {// small boost forwards and up when sliding
@@ -258,5 +261,14 @@ public class PlayerMovement : MonoBehaviour
         }
 
         windSound.volume = playerRigid.linearVelocity.magnitude / 65;
+    }
+
+    private void OnCollisionEnter(Collision collision)
+    {
+        if (collision.gameObject.name == "Ground" && quickFalling)
+        {
+            slamSound.Play();
+            quickFalling = false;
+        }
     }
 }
