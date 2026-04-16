@@ -27,7 +27,7 @@ public class Bullet : MonoBehaviour
             {// parry
                 auSo.clip = parryAC;
             }
-            else
+            else if (Time.timeScale > 0.9f)
             {// hurt
                 auSo.clip = hurtAC;
                 if (hurtImg.color.a > 0.15f)

@@ -1,6 +1,8 @@
 using NodeCanvas.Framework;
 using System.Collections;
+using TMPro;
 using UnityEngine;
+using UnityEngine.SceneManagement;
 using UnityEngine.UI;
 
 public class Slice : MonoBehaviour
@@ -28,10 +30,23 @@ public class Slice : MonoBehaviour
 
     public Blackboard bbRun, bbChase;
 
-    public Transform childBloodObj;
+    private bool timerOn = true;
+    private float timerTime = 0;
+    public TextMeshProUGUI timerText;
 
     void Update()
     {
+        if (timerOn)
+        {
+            timerTime += Time.deltaTime;
+            timerText.text = timerTime.ToString("#.00");
+        }
+
+        if (Input.GetKey(KeyCode.R))
+        {
+            SceneManager.LoadScene("LoadInScene", LoadSceneMode.Single);
+        }
+
         if (Input.GetMouseButtonDown(0) && swingTimer <= 0)
         {
             swingTimer = swingTime;
@@ -42,10 +57,7 @@ public class Slice : MonoBehaviour
 
             if (Physics.Raycast(transform.position, transform.forward, 7, maxwMask))
             {
-                childBloodObj.transform.parent = transform.parent;
-                childBloodObj.transform.position = transform.position;
-                childBloodObj.gameObject.SetActive(true);
-                catObj.SetActive(false);
+                SceneManager.LoadScene("LoadInScene", LoadSceneMode.Single);
             }
 
             if (Physics.Raycast(transform.position, transform.forward, 8, mask))
@@ -98,6 +110,7 @@ public class Slice : MonoBehaviour
                         StartCoroutine(TheyStoleYourCat());
                         break;
                     case 3:
+                        timerOn = false;
                         Time.timeScale = 0.1f;
                         bloodParticles.transform.position = new Vector3(pS.gameObject.transform.position.x, 0, pS.gameObject.transform.position.z);
                         bloodParticles.SetActive(true);
