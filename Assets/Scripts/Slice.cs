@@ -60,7 +60,7 @@ public class Slice : MonoBehaviour
                 SceneManager.LoadScene("LoadInScene", LoadSceneMode.Single);
             }
 
-            if (Physics.Raycast(transform.position, transform.forward, 8, mask))
+            if (Physics.Raycast(transform.position, transform.forward, 9, mask))
             {
                 hits++;
                 auSo.clip = hitSound;
